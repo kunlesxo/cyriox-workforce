@@ -1,5 +1,5 @@
 export const signuplogic = async (username, email, password, role) => {
-  const BASE_URL = "http://127.0.0.1:8000/signup/";
+  const BASE_URL = "http://secondary-chad-cirus-03a80251.koyeb.app/signup/";
   let signupUrl = BASE_URL + "user/"; // Default to customer signup
 
   if (role === "Distributor") {
@@ -33,7 +33,7 @@ export const signuplogic = async (username, email, password, role) => {
   export const login=async(email, password)=> {
     try {
         const response = await fetch(
-            "http://127.0.0.1:8000/login/",
+            "http://secondary-chad-cirus-03a80251.koyeb.app/login/",
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -65,7 +65,7 @@ export const isAuthenticated = () => {
 };
 
 export const googleSignIn = async (id_token) => {
-    const response = await fetch("http://127.0.0.1:8000/google/auth", {
+    const response = await fetch("http://secondary-chad-cirus-03a80251.koyeb.app/google/auth", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
