@@ -31,13 +31,16 @@ export const signuplogic = async (username, email, password, role) => {
   
 
 export const login = async (email, password) => {
+  const requestBody = JSON.stringify({ email, password });
+  console.log("📤 Sending Request:", requestBody);
+
   try {
       const response = await fetch(
           "https://secondary-chad-cirus-03a80251.koyeb.app/login/",
           {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, password }),
+              body: requestBody,
           }
       );
 
@@ -55,8 +58,6 @@ export const login = async (email, password) => {
       return { success: false, message: "Network error. Please try again." };
   }
 };
-
-
 
 
 // ✅ Logout function
