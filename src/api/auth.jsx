@@ -33,7 +33,7 @@ export const signuplogic = async (username, email, password, role) => {
 export const login = async (email, password) => {
   try {
       const response = await fetch(
-          "https://secondary-chad-cirus-03a80251.koyeb.app/login/", // 🔥 Ensure correct API path
+          "https://secondary-chad-cirus-03a80251.koyeb.app/login/",
           {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -42,10 +42,11 @@ export const login = async (email, password) => {
       );
 
       const data = await response.json();
-      console.log("Login API Response:", data); // 👀 Log the response
+      console.log("🔍 API Response:", data); // Log full response
 
       if (!response.ok) {
-          return { success: false, message: data.detail || "Login failed" };
+          console.error("❌ Login Failed:", data);
+          return { success: false, message: data.detail || "Invalid login" };
       }
 
       return { success: true, data };
@@ -54,6 +55,7 @@ export const login = async (email, password) => {
       return { success: false, message: "Network error. Please try again." };
   }
 };
+
 
 
 
