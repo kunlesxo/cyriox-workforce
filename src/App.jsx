@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import PrivateRoute from "./routes/PrivateRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signupages";
-import UserDashboard from "./components/User/UserDashboard";
+import UserDashboard from "./components/user/UserDashboard";
 import DistributorDashboard from "./components/distributor/DistributorDashboard"
 
 function App() {
