@@ -48,44 +48,46 @@ const LoginPage = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setServerError("");
-
+    
         try {
             const response = await login(formData.email, formData.password);
             console.log("🔍 Full API Response:", response);
-
-            if (!response || typeof response !== "object") {
+    
+            if (!response || typeof response !== "object" || !response.success) {
                 console.error("🚨 Invalid API response:", response);
-                setServerError("Invalid response from server.");
+                setServerError(response?.message || "Invalid response from server.");
                 return;
             }
-
-            const { access, data } = response;
-            const role = data?.role; // Extract role properly
-
+    
+            // Extract `access`, `refresh`, and `role` from nested `data`
+            const { access, refresh, data } = response.data || {};
+            const role = data?.role; // Role is inside `data`
+    
             if (!access) {
                 console.error("🚨 Missing access token:", response);
                 setServerError("Login failed. No token received.");
                 return;
             }
-
+    
             if (!role) {
                 console.error("🚨 Missing role in API response:", response);
                 setServerError("Login failed. No role received.");
                 return;
             }
-
+    
             // ✅ Store token and role
             localStorage.setItem("token", access);
+            localStorage.setItem("refresh", refresh);
             localStorage.setItem("role", role.trim().toLowerCase());
-
+    
             console.log("✅ Token & Role Saved:", access, role);
-            navigateBasedOnRole(role); // ✅ Now it exists
+            navigateBasedOnRole(role);
         } catch (error) {
             console.error("❌ Login Error:", error);
             setServerError("An error occurred. Please check your credentials.");
         }
     };
-
+    
     return (
         <div className="flex flex-col md:flex-row min-h-screen">
         {/* Left Section - Hidden on mobile */}

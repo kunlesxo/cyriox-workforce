@@ -28,38 +28,44 @@ export const signuplogic = async (username, email, password, role) => {
 };
 
 
-  
-
 export const login = async (email, password) => {
-  const requestBody = JSON.stringify({ email, password });
-  console.log("📤 Sending Request:", requestBody);
-
   try {
       const response = await fetch(
           "https://secondary-chad-cirus-03a80251.koyeb.app/login/",
           {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: requestBody,
+              body: JSON.stringify({ email, password }),
           }
       );
 
       const data = await response.json();
-      console.log("🔍 API Response:", data); // Log full response
+      console.log("🔍 API Response:", data);
 
       if (!response.ok) {
           console.error("❌ Login Failed:", data);
           return { success: false, message: data.detail || "Invalid login" };
       }
 
-      return { success: true, data };
+      if (data.access && data.refresh) {
+          localStorage.setItem("accessToken", data.access);
+          localStorage.setItem("refreshToken", data.refresh);
+          console.log("✅ Tokens Stored Successfully");
+          return { success: true, data };
+      } else {
+          console.error("🚨 Missing access token:", data);
+          return { success: false, message: "Missing authentication token" };
+      }
   } catch (error) {
-      console.error("Login API Error:", error);
+      console.error("⚠️ Login API Error:", error);
       return { success: false, message: "Network error. Please try again." };
   }
 };
+ 
 
 
+
+     
 // ✅ Logout function
 export const logout = () => {
     localStorage.removeItem("access_token");
