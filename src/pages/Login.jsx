@@ -45,48 +45,41 @@ const LoginPage = () => {
     
 
     // 🔹 Handle login submission
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setServerError("");
+    const handleLogin = async (email, password) => {
+        const response = await fetch("login/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
     
-        try {
-            const response = await login(formData.email, formData.password);
-            console.log("🔍 Full API Response:", response);
-    
-            if (!response || typeof response !== "object" || !response.success) {
-                console.error("🚨 Invalid API response:", response);
-                setServerError(response?.message || "Invalid response from server.");
-                return;
-            }
-    
-            // Extract `access`, `refresh`, and `role` from nested `data`
-            const { access, refresh, data } = response.data || {};
-            const role = data?.role; // Role is inside `data`
-    
-            if (!access) {
-                console.error("🚨 Missing access token:", response);
-                setServerError("Login failed. No token received.");
-                return;
-            }
-    
-            if (!role) {
-                console.error("🚨 Missing role in API response:", response);
-                setServerError("Login failed. No role received.");
-                return;
-            }
-    
-            // ✅ Store token and role
-            localStorage.setItem("token", access);
-            localStorage.setItem("refresh", refresh);
-            localStorage.setItem("role", role.trim().toLowerCase());
-    
-            console.log("✅ Token & Role Saved:", access, role);
-            navigateBasedOnRole(role);
-        } catch (error) {
-            console.error("❌ Login Error:", error);
-            setServerError("An error occurred. Please check your credentials.");
+        const data = await response.json();
+        if (response.status === 202) {
+            // 2FA required, ask for OTP
+            setOtpRequired(true);
+        } else if (response.status === 200) {
+            // Successful login, store tokens
+            localStorage.setItem("access_token", data.access);
+            localStorage.setItem("refresh_token", data.refresh);
         }
     };
+    
+    const verifyOTP = async (otp) => {
+        const response = await fetch("/api/verify-otp/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp })
+        });
+    
+        const data = await response.json();
+        if (response.status === 200) {
+            // Successful OTP verification, store tokens
+            localStorage.setItem("access_token", data.access);
+            localStorage.setItem("refresh_token", data.refresh);
+        } else {
+            alert("Invalid OTP");
+        }
+    };
+    
     
     return (
         <div className="flex flex-col md:flex-row min-h-screen">

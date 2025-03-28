@@ -2,8 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import PrivateRoute from "./routes/PrivateRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signupages";
-import UserDashboard from "./components/user/UserDashboard";
-import DistributorDashboard from "./components/distributor/DistributorDashboard"
+import UserDashboard from "./components/user/Dashboard";
+import DistributorDashboard from "./components/distributor/DistributorDashboard";
 
 function App() {
     return (
@@ -14,7 +14,7 @@ function App() {
 
             {/* Private Route for Base User */}
             <Route path="/distributor/dashboard" element={<PrivateRoute allowedRoles={["distributor"]} />}>
-    <Route index element={<DistributorDashboard />} />
+  <Route index element={<DistributorDashboard />} />
 </Route>
 
 <Route path="/customer/dashboard" element={<PrivateRoute allowedRoles={["customer"]} />}>
