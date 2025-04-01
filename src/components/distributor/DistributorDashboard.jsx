@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false); // State for submenu
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -14,7 +15,7 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'Dashboard',
-            path: '/dashboard'
+            path: '/distributor/dashboard/products'
         },
         { 
             icon: (
@@ -23,7 +24,16 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'User Management',
-            path: '/dashboard/user'
+            path: '/distributor/dashboard/usermanagement'
+        },
+        {
+            icon: (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 12.75L9.75 8m0 0l4.5 4.75M9.75 8v9" />
+                </svg>
+            ),
+            label: 'Orders',
+            path: '/distributor/dashboard/orders'
         },
         { 
             icon: (
@@ -32,7 +42,7 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'Invoicing',
-            path: '/dashboard/invoice'
+            path: '/distributor/dashboard/invoiceget'
         },
         { 
             icon: (
@@ -51,8 +61,21 @@ const AdminDashboard = () => {
             ),
             label: 'Communication',
             path: '/dashboard/messages'
-        }
+        },
+        // ... Other menu items
+        { 
+            icon: (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m7-7H5" />
+                </svg>
+            ),
+            label: 'Add Product',
+            path: '#',
+            onClick: () => setIsAddProductOpen(!isAddProductOpen) // Toggle submenu
+        },
+        // ... Other menu items
     ];
+    
 
     const handleSignOut = () => {
         localStorage.removeItem('authToken');
@@ -84,28 +107,41 @@ const AdminDashboard = () => {
 
                 <nav className="py-6 space-y-1">
                     {menuItems.map((item) => (
-                        <Link 
-                            key={item.path} 
-                            to={item.path} 
-                            className={`
-                                flex items-center px-6 py-3 text-sm font-medium
-                                transition-all duration-200 ease-in-out
-                                group
-                                ${location.pathname === item.path 
-                                    ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' 
-                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
-                            `}
-                        >
-                            <div className={`
-                                mr-3 p-2 rounded-xl transition-all duration-300
-                                ${location.pathname === item.path 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'group-hover:bg-gray-200'}
-                            `}>
-                                {item.icon}
-                            </div>
-                            <span>{item.label}</span>
-                        </Link>
+                        <div key={item.label}>
+                            <Link 
+                                to={item.path}
+                                onClick={item.onClick} // Handle submenu toggle for 'Add Product'
+                                className={`
+                                    flex items-center px-6 py-3 text-sm font-medium
+                                    transition-all duration-200 ease-in-out
+                                    group
+                                    ${location.pathname === item.path 
+                                        ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600' 
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }
+                                `}
+                            >
+                                <div className={`mr-3 p-2 rounded-xl transition-all duration-300
+                                    ${location.pathname === item.path 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'group-hover:bg-gray-200'}`}
+                                >
+                                    {item.icon}
+                                </div>
+                                <span>{item.label}</span>
+                            </Link>
+
+                            {/* Submenu for Add Product */}
+                            {item.label === 'Add Product' && isAddProductOpen && (
+                                <div className="pl-6">
+                                    <Link to="/dashboard/products/add-category" className="block text-sm text-gray-600 hover:bg-gray-100 p-3 rounded-md">
+                                        Add Category
+                                    </Link>
+                                    <Link to="/dashboard/products/add-product" className="block text-sm text-gray-600 hover:bg-gray-100 p-3 rounded-md">
+                                        Add Product
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                     ))}
 
                     <div className="mt-auto px-6 py-4 border-t">
@@ -126,7 +162,6 @@ const AdminDashboard = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top Navigation */}
                 <header className="bg-white shadow-md m-2 rounded-xl border border-gray-200">
                     <div className="flex items-center justify-between h-16 px-6">
                         <div className="flex items-center">

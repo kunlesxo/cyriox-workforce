@@ -1,26 +1,37 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 const PrivateRoute = ({ allowedRoles }) => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("access_token");
     let role = localStorage.getItem("role")?.trim().toLowerCase();
 
-    if (!token) {
-        console.log("🚨 No token found. Redirecting to login.");
+    // 🚨 Debugging Toggle (Set to `true` to enable logs)
+    const DEBUG = true;
+
+    if (!accessToken) {
+        DEBUG && console.log("🚨 No access token found. Redirecting to login.");
         return <Navigate to="/" replace />;
     }
 
-    // ✅ Convert "base user" to "customer" (if needed)
-    if (role === "base user") {
-        console.warn("🔄 Mapping 'base user' to 'customer'");
-        role = "customer";  
-    }
-
-    if (!role || !allowedRoles.includes(role)) {
-        console.log(`🚨 Unauthorized: Role "${role}" not allowed. Redirecting.`);
+    if (!role) {
+        DEBUG && console.log("🚨 No role found. Redirecting to unauthorized.");
         return <Navigate to="/unauthorized" replace />;
     }
 
-    console.log(`✅ Access granted: Role "${role}".`);
+    // ✅ Normalize "base user" to "customer"
+    if (role === "base user") {
+        DEBUG && console.warn("🔄 Mapping 'base user' to 'customer'");
+        role = "customer";  
+    }
+
+    // ✅ Ensure case-insensitive role matching
+    const allowedRolesLower = allowedRoles.map(r => r.toLowerCase());
+
+    if (!allowedRolesLower.includes(role)) {
+        DEBUG && console.log(`🚨 Unauthorized: Role "${role}" not allowed. Redirecting.`);
+        return <Navigate to="/unauthorized" replace />;
+    }
+
+    DEBUG && console.log(`✅ Access granted: Role "${role}".`);
     return <Outlet />;
 };
 

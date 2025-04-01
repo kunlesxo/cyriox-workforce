@@ -1,12 +1,14 @@
 export const signuplogic = async (username, email, password, role) => {
-  const BASE_URL = "https://secondary-chad-cirus-03a80251.koyeb.app/signup/user/"; // Ensure correct API path
+  const BASE_URL = "http://127.0.0.1:8000/user/signup/"; // Ensure correct API path
 
-  let signupUrl = `${BASE_URL}/user`; // Default to customer signup
+  let signupUrl = `${BASE_URL}`; // Default to customer signup
   if (role === "Distributor") {
-    signupUrl = `${BASE_URL}/distributor`;
+    signupUrl = `${BASE_URL}distributor`; // Update for distributor signup
   }
 
   try {
+    console.log('Signup URL:', signupUrl); // Log the URL for debugging
+
     const response = await fetch(signupUrl, {
       method: "POST",
       headers: {
@@ -16,6 +18,7 @@ export const signuplogic = async (username, email, password, role) => {
     });
 
     const data = await response.json();
+    console.log('API Response:', data); // Log the response data
 
     if (!response.ok) {
       return { success: false, message: data.detail || "Signup failed" };
@@ -23,15 +26,17 @@ export const signuplogic = async (username, email, password, role) => {
 
     return { success: true, data };
   } catch (error) {
+    console.error('Error during signup:', error); // Log any network error
     return { success: false, message: "Network error. Please try again." };
   }
 };
 
 
+
 export const login = async (email, password) => {
   try {
       const response = await fetch(
-          "https://secondary-chad-cirus-03a80251.koyeb.app/login/",
+          "http://127.0.0.1:8000/login/",
           {
               method: "POST",
               headers: { "Content-Type": "application/json" },
