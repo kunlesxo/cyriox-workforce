@@ -13,49 +13,53 @@ const ProductGrid = ({ distributorId }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!distributorId) {
-        setError('No distributor ID provided');
+        setError('No distributor name provided');
         setIsLoading(false);
         return;
       }
-   
+    
       const distributorToken = localStorage.getItem('distributorToken');
       if (!distributorToken) {
         setError('No distributor token found. Please log in.');
         setIsLoading(false);
         return;
       }
-   
+    
       try {
         setIsLoading(true);
-   
-        // Fetch products for the specific distributor using the distributorId and token
-        const productResponse = await fetch(`${API_BASE_URL}/distributors/${distributorId}/products`, {
+    
+        // Fetch products using the distributor name as a query parameter
+        const productResponse = await fetch(`${API_BASE_URL}/products/?distributor_name=${distributorId}`, {
           headers: {
             'Authorization': `Bearer ${distributorToken}`,
             'Content-Type': 'application/json',
           },
         });
-   
+    
         if (!productResponse.ok) {
+          const errorText = await productResponse.text();
+          console.error("API Error Response:", errorText);
           throw new Error(`Failed to fetch distributor products: ${productResponse.statusText}`);
         }
-   
+    
         const productData = await productResponse.json();
-        setProducts(productData);
-   
+        console.log("Fetched Products:", productData); // Debugging the API response
+    
+        setProducts(productData.products);
+    
         // Extract categories from products
         const uniqueCategories = [];
         const categoryMap = {};
-        productData.forEach((product) => {
+        productData.products.forEach((product) => {
           const categoryId = product.category_id || product.categoryId || product.category;
           const categoryName = product.category_name || product.categoryName || product.category;
-   
+    
           if (categoryId && !categoryMap[categoryId]) {
             categoryMap[categoryId] = true;
             uniqueCategories.push({ id: categoryId, name: categoryName });
           }
         });
-   
+    
         setCategories(uniqueCategories);
       } catch (err) {
         console.error('API Error:', err);
@@ -63,7 +67,8 @@ const ProductGrid = ({ distributorId }) => {
       } finally {
         setIsLoading(false);
       }
-   };
+    };
+    
    
     fetchData();
   }, [distributorId]);

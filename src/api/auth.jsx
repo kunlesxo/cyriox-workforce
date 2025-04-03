@@ -1,12 +1,12 @@
 export const signuplogic = async (username, email, password, role) => {
-  const BASE_URL = "http://127.0.0.1:8000/user/signup/"; // Ensure correct API path
+  const BASE_URL = "https://rival-melinde-cirus-f8c901fe.koyeb.app/user/signup/"; // Ensure correct API path
 
   let signupUrl = `${BASE_URL}`; // Default to customer signup
   if (role === "Distributor") {
     signupUrl = `${BASE_URL}distributor`; // Update for distributor signup
   }
 
-  try {
+  try { 
     console.log('Signup URL:', signupUrl); // Log the URL for debugging
 
     const response = await fetch(signupUrl, {
@@ -36,7 +36,7 @@ export const signuplogic = async (username, email, password, role) => {
 export const login = async (email, password) => {
   try {
       const response = await fetch(
-          "http://127.0.0.1:8000/login/",
+          "https://rival-melinde-cirus-f8c901fe.koyeb.app/login/",
           {
               method: "POST",
               headers: { "Content-Type": "application/json" },
