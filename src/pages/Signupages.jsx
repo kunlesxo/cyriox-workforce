@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signuplogic } from "../api/auth"; // Ensure API function is correctly imported
+import { signuplogic } from "../api/signupauth"; // Ensure API function is correctly imported
 
 const Signup = () => {
   const navigate = useNavigate(); // Initialize useNavigate

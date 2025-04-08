@@ -1,186 +1,323 @@
 import React, { useState, useEffect } from 'react';
 
-const ProductGrid = ({ distributorId }) => {
-  const [products, setProducts] = useState([]);
+const API_URL = 'http://127.0.0.1:8000/product/';
+
+const AddProduct = () => {
   const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Base URL for API calls
-  const API_BASE_URL = 'http://127.0.0.1:8000/product';
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    description: '',
+    price: '',
+    stock_quantity: '',
+    category: '',
+    newCategory: '',
+    image: null,
+  });
+
+  const [formError, setFormError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!distributorId) {
-        setError('No distributor name provided');
-        setIsLoading(false);
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const token = getToken();
+      if (!token) {
+        setError('Authentication token not found. Please log in.');
+        setLoading(false);
         return;
       }
-    
-      const distributorToken = localStorage.getItem('distributorToken');
-      if (!distributorToken) {
-        setError('No distributor token found. Please log in.');
-        setIsLoading(false);
-        return;
+
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await fetch(`${API_URL}categories/`, { headers });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories. Status: ${response.status}`);
       }
-    
-      try {
-        setIsLoading(true);
-    
-        // Fetch products using the distributor name as a query parameter
-        const productResponse = await fetch(`${API_BASE_URL}/products/?distributor_name=${distributorId}`, {
+
+      const data = await response.json();
+      setCategories(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'image') {
+      setNewProduct({ ...newProduct, [name]: files[0] });
+    } else {
+      setNewProduct({ ...newProduct, [name]: value });
+    }
+  };
+
+  const getToken = () => {
+    return (
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('authToken') ||
+      sessionStorage.getItem('access_token') ||
+      sessionStorage.getItem('token')
+    );
+  };
+
+  const resetForm = () => {
+    setNewProduct({
+      name: '',
+      description: '',
+      price: '',
+      stock_quantity: '',
+      category: '',
+      newCategory: '',
+      image: null
+    });
+    setFormError(null);
+    setSubmitSuccess(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    const token = getToken();
+    const distributorId = localStorage.getItem('distributor_id');
+  
+    if (!token || !distributorId) {
+      setError('Missing token or distributor ID. Please log in again.');
+      return;
+    }
+  
+    if (!newProduct.name || !newProduct.price || !newProduct.stock_quantity || (!newProduct.category && !newProduct.newCategory)) {
+      setFormError('Name, Price, Stock Quantity, and Category are required!');
+      return;
+    }
+  
+    try {
+      setIsSubmitting(true);
+  
+      let categoryId = newProduct.category;
+  
+      // If a new category name is provided, create it first
+      if (!categoryId && newProduct.newCategory) {
+        const categoryRes = await fetch(`${API_URL}categories/`, {
+          method: 'POST',
           headers: {
-            'Authorization': `Bearer ${distributorToken}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ name: newProduct.newCategory }),
         });
-    
-        if (!productResponse.ok) {
-          const errorText = await productResponse.text();
-          console.error("API Error Response:", errorText);
-          throw new Error(`Failed to fetch distributor products: ${productResponse.statusText}`);
+  
+        if (!categoryRes.ok) {
+          const errData = await categoryRes.json();
+          throw new Error(`Category Error: ${JSON.stringify(errData)}`);
         }
-    
-        const productData = await productResponse.json();
-        console.log("Fetched Products:", productData); // Debugging the API response
-    
-        setProducts(productData.products);
-    
-        // Extract categories from products
-        const uniqueCategories = [];
-        const categoryMap = {};
-        productData.products.forEach((product) => {
-          const categoryId = product.category_id || product.categoryId || product.category;
-          const categoryName = product.category_name || product.categoryName || product.category;
-    
-          if (categoryId && !categoryMap[categoryId]) {
-            categoryMap[categoryId] = true;
-            uniqueCategories.push({ id: categoryId, name: categoryName });
-          }
-        });
-    
-        setCategories(uniqueCategories);
-      } catch (err) {
-        console.error('API Error:', err);
-        setError(`Error: ${err.message}`);
-      } finally {
-        setIsLoading(false);
+  
+        const createdCategory = await categoryRes.json();
+        categoryId = createdCategory.id;
       }
-    };
-    
-   
-    fetchData();
-  }, [distributorId]);
-
-  // Filter products by category (client-side filtering)
-  const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter(product => {
-        const productCategory = product.category_id || product.categoryId || product.category;
-        return productCategory === selectedCategory;
+  
+      const formData = new FormData();
+      formData.append('name', newProduct.name);
+      formData.append('description', newProduct.description);
+      formData.append('price', newProduct.price);
+      formData.append('stock_quantity', newProduct.stock_quantity);
+      formData.append('distributor', distributorId);
+      formData.append('category_id', categoryId); // ensure this is an integer
+  
+      if (newProduct.image) {
+        formData.append('image', newProduct.image);
+      }
+  
+      const response = await fetch(`${API_URL}products/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
       });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
+  
+      await response.json();
+      setSubmitSuccess(true);
+      resetForm();
+    } catch (error) {
+      setError(`Error: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
 
-  if (isLoading) {
+  if (loading && categories.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center text-red-500 p-4">
-        <p>Error: {error}</p>
-        <p className="text-sm mt-2">Please check your API connection and make sure the server is running.</p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Distributor Products</h1>
-      
-      {/* Category Filter */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Categories</h2>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 rounded-full ${
-              selectedCategory === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-          >
-            All
-          </button>
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Add New Product</h1>
 
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full ${
-                selectedCategory === category.id ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <span className="block sm:inline">{error}</span>
         </div>
-      </div>
+      )}
 
-      {/* Product Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map(product => (
-            <div key={product.id || product._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-              <div className="h-48 p-4 bg-gray-100 flex items-center justify-center">
-                <img
-                  src={product.image || product.imageUrl || product.image_url || '/api/placeholder/200/200'}
-                  alt={product.title || product.name || 'Product'}
-                  className="max-h-full max-w-full object-contain"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/api/placeholder/200/200';
-                  }}
-                />
-              </div>
-              <div className="p-4">
-                <p className="text-sm text-blue-600 font-semibold mb-1">
-                  {product.category_name || product.categoryName || product.category || 'Uncategorized'}
-                </p>
-                <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2" title={product.title || product.name}>
-                  {product.title || product.name || 'Unnamed Product'}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3" title={product.description}>
-                  {product.description || 'No description available'}
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-gray-900">
-                    ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price || '0.00'}
-                  </span>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-300">
-                    Add to Cart
-                  </button>
-                </div>
-                {product.stock !== undefined && (
-                  <div className="mt-2 text-sm">
-                    <span className={`${parseInt(product.stock) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {parseInt(product.stock) > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8 text-gray-500">
-            No products found in this category.
+      {submitSuccess && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <span className="block sm:inline">Product added successfully!</span>
+        </div>
+      )}
+
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        {formError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{formError}</span>
           </div>
         )}
+
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
+          {/* Name */}
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={newProduct.name}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div className="mb-4">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={newProduct.description}
+              onChange={handleInputChange}
+              rows="3"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            ></textarea>
+          </div>
+
+          {/* Price */}
+          <div className="mb-4">
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              value={newProduct.price}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+
+          {/* Stock Quantity */}
+          <div className="mb-4">
+            <label htmlFor="stock_quantity" className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity *</label>
+            <input
+              type="number"
+              id="stock_quantity"
+              name="stock_quantity"
+              value={newProduct.stock_quantity}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+
+          {/* Category */}
+          <div className="mb-4">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+            <select
+              id="category"
+              name="category"
+              value={newProduct.category}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Select a Category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+
+            <p className="text-sm text-gray-500 mt-2">Or create a new category below:</p>
+            <input
+              type="text"
+              name="newCategory"
+              value={newProduct.newCategory}
+              onChange={handleInputChange}
+              placeholder="Enter new category name"
+              className="mt-1 px-3 py-2 border border-gray-300 rounded-md w-full"
+            />
+          </div>
+
+          {/* Image */}
+          <div className="mb-4">
+            <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+            <input
+              type="file"
+              id="image"
+              name="image"
+              onChange={handleInputChange}
+              className="w-full text-sm text-gray-700 border border-gray-300 rounded-md"
+            />
+            {newProduct.image && (
+              <div className="mt-2">
+                <img
+                  src={URL.createObjectURL(newProduct.image)}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex items-center justify-between">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Adding Product...' : 'Add Product'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default ProductGrid;
+export default AddProduct;

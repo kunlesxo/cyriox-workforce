@@ -7,7 +7,11 @@ import DistributorDashboard from "./components/distributor/DistributorDashboard"
 import ProductList from "./pages/distributor/Product";
 import DistributorUserManagement from "./pages/distributor/UserManagement";
 import OrderManagement from "./pages/distributor/OrderDetails";
-import InvoiceManagement from "./pages/distributor/InvoiceDetails";
+import  DistributorsInvoice from "./pages/distributor/InvoiceControl";
+import CategoryManagement from "./pages/distributor/Category";
+import DistributorProductsOutlet from "./pages/distributor/ProductDisplay";
+import PaystackPayment from "./pages/distributor/Transactions";
+import DistributorCustomerChat from "./pages/distributor/Chat";
 
 function App() {
     return (
@@ -20,11 +24,17 @@ function App() {
             <Route path="/distributor/dashboard" element={<PrivateRoute allowedRoles={["distributor"]} />}>
                 <Route element={<DistributorDashboard />}>
                     {/* ✅ Redirect default dashboard to products */}
-                    <Route index element={<Navigate to="products" replace />} />
+                    <Route index element={<Navigate to="productdisplay" replace />} />
                     <Route path="products" element={<ProductList />} />
+                    <Route path="categories" element={<CategoryManagement />} />
                     <Route path="usermanagement" element={<DistributorUserManagement />} />
                     <Route path="orders" element={< OrderManagement/>} />
-                    <Route path="invoiceget" element={<InvoiceManagement />} />
+                    <Route path="invoicecreate" element={< DistributorsInvoice />} />
+                    <Route path="productdisplay" element={< DistributorProductsOutlet />} />
+                    <Route path="payments" element={<PaystackPayment />} />
+                    <Route path="chats" element={<DistributorCustomerChat/>}/>
+
+
 
 
 

@@ -15,7 +15,7 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'Dashboard',
-            path: '/distributor/dashboard/products'
+            path: '/distributor/dashboard/productdisplay'
         },
         { 
             icon: (
@@ -42,7 +42,7 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'Invoicing',
-            path: '/distributor/dashboard/invoiceget'
+            path: '/distributor/dashboard/invoicecreate'
         },
         { 
             icon: (
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'Financial Transactions',
-            path: '/dashboard/transactions'
+            path: '/distributor/dashboard/payments'
         },
         { 
             icon: (
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
                 </svg>
             ),
             label: 'Communication',
-            path: '/dashboard/messages'
+            path: '/distributor/dashboard/chats'
         },
         // ... Other menu items
         { 
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
                 border-r border-gray-200
                 rounded-r-3xl overflow-hidden
             `}>
-                <div className="flex items-center justify-between h-16 bg-blue-600 text-white font-bold px-4">
+                <div className="flex items-center justify-between h-16 bg-gray-800 text-white font-bold px-4">
                     <span className="text-lg">Corporate Dashboard</span>
                     <button 
                         onClick={() => setIsSidebarOpen(false)}
@@ -133,10 +133,10 @@ const AdminDashboard = () => {
                             {/* Submenu for Add Product */}
                             {item.label === 'Add Product' && isAddProductOpen && (
                                 <div className="pl-6">
-                                    <Link to="/dashboard/products/add-category" className="block text-sm text-gray-600 hover:bg-gray-100 p-3 rounded-md">
+                                    <Link to="/distributor/dashboard/categories" className="block text-sm text-gray-600 hover:bg-gray-100 p-3 rounded-md">
                                         Add Category
                                     </Link>
-                                    <Link to="/dashboard/products/add-product" className="block text-sm text-gray-600 hover:bg-gray-100 p-3 rounded-md">
+                                    <Link to="/distributor/dashboard/products" className="block text-sm text-gray-600 hover:bg-gray-100 p-3 rounded-md">
                                         Add Product
                                     </Link>
                                 </div>

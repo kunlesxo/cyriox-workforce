@@ -1,5 +1,5 @@
 export const signuplogic = async (username, email, password, role) => {
-  const BASE_URL = "https://rival-melinde-cirus-f8c901fe.koyeb.app/user/signup/"; // Ensure correct API path
+  const BASE_URL = "http://127.0.0.1:8000/user/signup/"; // Ensure correct API path
 
   let signupUrl = `${BASE_URL}`; // Default to customer signup
   if (role === "Distributor") {
